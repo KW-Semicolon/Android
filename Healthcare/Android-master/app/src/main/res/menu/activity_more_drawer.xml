@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/mainfeed"
+            android:icon="@drawable/home"
+            android:title="HOME" />
+        <item
+            android:id="@+id/status"
+            android:icon="@drawable/check"
+            android:title="STATUS" />
+        <item
+            android:id="@+id/chart"
+            android:icon="@drawable/chart"
+            android:title="CHART" />
+        <item
+            android:id="@+id/like"
+            android:icon="@drawable/like"
+            android:title="HEALTH" />
+        <item
+            android:id="@+id/more"
+            android:icon="@drawable/settings"
+            android:title="MORE" />
+    </group>
+
+</menu>

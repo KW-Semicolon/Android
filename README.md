@@ -3,7 +3,7 @@
 ⚠ <b> 이 프로젝트는 한국저작권위원회에 저작권이 등록된 소스코드로, 재사용 및 배포가 어렵습니다. <b/> ⚠
 <br/>
 ( ⚠ <b> This project is a source code copyrighted by the Korea Copyright Commission, and it is difficult to reuse and distribute yet. <b/> ⚠ )
-<br/>
+<br/><br/>
 - 안드로이드
 <br/>
 - 개발자 : 이윤지 (lamlyg)
@@ -11,6 +11,7 @@
 - SW개발환경 : Android Studio, JAVA<br/>
 <br/>
 <br/><br/>
+ 
 <b>메인화면<b/><br/><br/>
 
 ![image](https://user-images.githubusercontent.com/33417495/83058181-eb34d900-a092-11ea-9529-1047edac5236.png)

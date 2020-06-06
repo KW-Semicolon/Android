@@ -1,6 +1,8 @@
 # 일상생활 중 건강모니터링을 위한 생체신호 딥러닝 분석 연구
 - 안드로이드
 <br/>
+SW개발환경 : Android Studio, JAVA<br/>
+<br/>
 <b>메인화면<b/><br/><br/>
 
 ![image](https://user-images.githubusercontent.com/33417495/83058181-eb34d900-a092-11ea-9529-1047edac5236.png)

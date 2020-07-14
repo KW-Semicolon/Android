@@ -44,7 +44,7 @@
 - targetSdkVersion : 28
 
 ## Library
-- Graph : [Chart](https://github.com/PhilJay/MPAndroidChart) : v2.1.6
+- [Graph] [Chart](https://github.com/PhilJay/MPAndroidChart) : v2.1.6
 
 <br/>
 

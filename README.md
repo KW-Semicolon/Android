@@ -102,3 +102,7 @@
 [Demo](https://youtu.be/TotJkS2vBcQ)
 <br/>
 [Presentation](https://youtu.be/ohXfZt1wx9s)
+
+
+## License & CopyRight
+This project is a source code copyrighted by the Korea Copyright Commission.

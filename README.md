@@ -100,7 +100,6 @@
 
 ## Result (Video)
 - 데모/시연영상 [Demo](https://youtu.be/TotJkS2vBcQ)
-<br/>
 - 최종발표영상 [Presentation](https://youtu.be/ohXfZt1wx9s)
 
 

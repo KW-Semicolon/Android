@@ -99,9 +99,9 @@
 <br/><br/>
 
 ## Result (Video)
-[Demo](https://youtu.be/TotJkS2vBcQ)
+- 데모/시연영상 [Demo](https://youtu.be/TotJkS2vBcQ)
 <br/>
-[Presentation](https://youtu.be/ohXfZt1wx9s)
+- 최종발표영상 [Presentation](https://youtu.be/ohXfZt1wx9s)
 
 
 ## License & CopyRight

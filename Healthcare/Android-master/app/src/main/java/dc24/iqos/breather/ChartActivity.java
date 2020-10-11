@@ -69,7 +69,7 @@ public class ChartActivity extends AppCompatActivity
         System.out.println(datetitle);
 
         String date_title = format.format(datetitle);
-        date_title="2020-05-20";
+        date_title="날짜 입력 ";
         // System.out.println(time1);
         //System.out.println(time2);
 

@@ -199,11 +199,11 @@
         android:layout_height="wrap_content"
         android:layout_below="@+id/line1"
         android:layout_alignLeft="@+id/text_time"
-        android:layout_marginLeft="151dp"
+        android:layout_marginLeft="118dp"
         android:layout_marginTop="10dp"
-        android:text="2020-05"
+        android:text="Health Records"
         android:textSize="20dp"
-        android:textStyle="bold"/>
+        android:textStyle="bold" />
 
     <TextView
         android:id="@+id/text_title"

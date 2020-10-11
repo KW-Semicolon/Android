@@ -60,6 +60,12 @@ import java.util.TimerTask;
 
 import android.database.Cursor;
 
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 import static dc24.iqos.breather.R.drawable.abc_btn_default_mtrl_shape;
 import static dc24.iqos.breather.R.drawable.dbp;
 import static dc24.iqos.breather.R.drawable.result4;
@@ -77,203 +83,13 @@ public class FeedActivity extends AppCompatActivity
     private DateRecyclerAdapter dateadapter;
     public DbOpenHelper mDbOpenHelper;//SQLite DB 사용 선언
     public TempData userdata; //SQLite DB에 결과값들을 버튼 클릭시 저장하도록
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed);
 
 
-        mDbOpenHelper = new DbOpenHelper(this);
-        mDbOpenHelper.open();
-
-        btn_measure = findViewById(R.id.btn_measure);
-        btn_measure.setOnClickListener(this);
-
-        btn_result = findViewById(R.id.btn_result);
-        btn_result.setOnClickListener(this);
-
-
-        //건강 결과가 담겨있는 txt파일에서 각각의 결과값을 받아올 String 변수 선언
-        String bp_txt = "";
-
-        String sbp_txt = "";
-        String dbp_txt = "";
-        String heart_txt = "";
-        String resp_txt = "";
-
-        /////////////////// "res/raw" 경로에 있는 Result txt file 읽기에 대한 try - catch 문 ////////////////
-        try {
-            InputStream in = getResources().openRawResource(R.raw.bp);
-            byte[] result = new byte[in.available()];
-            in.read(result);
-            bp_txt = new String(result);
-            System.out.println("BP DATA " + bp_txt);
-        } catch (Exception e) {
-
-        }
-        System.out.println("BP DATA " + bp_txt);
-
-        String[] bp_temp = bp_txt.split(", "); //SBP, DBP값 파싱
-
-        sbp_txt = bp_temp[0];
-        sbp_txt = sbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리
-        dbp_txt = bp_temp[1];
-        dbp_txt = dbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리 (ex) "88\n"
-
-        System.out.println("SBP DATA " + sbp_txt);
-        System.out.println("DBP DATA " + dbp_txt);
-        try {
-
-            InputStream in = getResources().openRawResource(R.raw.heart);
-            byte[] result = new byte[in.available()];
-            in.read(result);
-            heart_txt = new String(result);
-            System.out.println("HEART DATA " + heart_txt);
-            heart_txt = heart_txt.replaceAll("[^0-9]", "");
-        } catch (Exception e) {
-
-        }
-        System.out.println("HEART ATA " + heart_txt);
-
-        try {
-
-            InputStream in = getResources().openRawResource(R.raw.resp);
-            byte[] result = new byte[in.available()];
-            in.read(result);
-            resp_txt = new String(result);
-            System.out.println("RESP DATA " + resp_txt);
-            resp_txt = resp_txt.replaceAll("[^0-9]", "");
-        } catch (Exception e) {
-
-        }
-        System.out.println("RESP DATA " + resp_txt);
-        ///////////////////////Result txt file 받아오기 - end /////////////////////////////////
-
-        //Date 객체를 이용한 현재 시간 출력//
-        SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
-        SimpleDateFormat format2 = new SimpleDateFormat("HH:mma");
-
-        Date time = new Date();
-
-        Date today = new Date();
-        System.out.println(today);
-
-
-        String time1 = format1.format(time);
-        String time2 = format2.format(time);
-
-        // System.out.println(time1);
-        //System.out.println(time2);
-
-        final TextView home_date = findViewById(R.id.home_date);
-        final TextView home_time = findViewById(R.id.home_time);
-
-
-        final ImageView bp_result = findViewById(R.id.bp_home);
-        final ImageView heart_result = findViewById(R.id.heart_home);
-        final ImageView resp_result = findViewById(R.id.resp_home);
-
-
-
-        home_date.setText(time1);
-        home_time.setText(time2);
-
-
-        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
-        heart_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
-        resp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
-
-        int sbp_value = 0;
-        int dbp_value = 0;
-        int heart_value = 0;
-        int resp_value = 0;
-
-        try {
-            sbp_value = Integer.parseInt(sbp_txt);
-            dbp_value = Integer.parseInt(dbp_txt);
-            //dbp_value = Integer.parseInt(dbp_txt.substring(0, 3));
-            System.out.println("sbp_value : " + sbp_value);
-            if (sbp_value < 90) {//저혈압
-                bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result1));
-            } else if (sbp_value >= 90 && sbp_value < 130) {
-                //정상
-                bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result2));
-            } else if (sbp_value >= 130 && sbp_value < 140) {
-                //고혈압 전단계
-                bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result3));
-            }else if (sbp_value >= 140 && sbp_value < 160) {
-                //1기 고혈압
-                bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result4));
-            }else if (sbp_value >= 160 && sbp_value < 180) {
-                //2기 고혈압
-                bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result5));
-            }else {
-                //고혈압 위기
-                bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result6));
-            }
-        } catch(NumberFormatException nfe) {
-            System.out.println("Could not parse " + nfe);
-        }
-        try {
-            heart_value = Integer.parseInt(heart_txt);
-            System.out.println("heart_value : " + heart_value);
-            if (heart_value < 50) {//서맥
-                heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result1));
-            } else if (heart_value >= 50 && heart_value <= 100) {
-                //정상
-                heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result2));
-            } else {
-                //빈맥
-                heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result3));
-            }
-        } catch(NumberFormatException nfe) {
-            System.out.println("Could not parse " + nfe);
-        }
-        try {
-            resp_value = Integer.parseInt(resp_txt);
-            System.out.println("resp_value : " + resp_value);
-            if (resp_value < 11) {//서맥
-                resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result1));
-            } else if (resp_value >= 11 && resp_value <= 23) {
-                //정상
-                resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result2));
-            } else {
-                //빈맥
-                resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result3));
-            }
-        } catch(NumberFormatException nfe) {
-            System.out.println("Could not parse " + nfe);
-        }
-
-        ////////////////bug ../////////////
-        SimpleDateFormat newformat1 = new SimpleDateFormat("yyyy-MM-dd");
-        SimpleDateFormat newformat2 = new SimpleDateFormat("HH");
-        SimpleDateFormat newformat3 = new SimpleDateFormat("a");
-        String calmin = "";
-
-        Calendar cal = Calendar.getInstance ( );
-        cal.add ( cal.MINUTE, -2 );
-        Date newtime = new Date();
-
-        Date newtoday = new Date();
-        System.out.println(newtoday);
-
-
-        String newtime1 = newformat1.format(newtime);
-        String newtime2 = newformat2.format(newtime)+":"+cal.get(cal.MINUTE)+newformat3.format(newtime);
-        ////////////////bug ../////////////
-
-        //DB 저장
-        userdata = new TempData(newtime1, newtime2 , sbp_value, dbp_value, heart_value, resp_value);
-
-        init();
-
-        getData(sbp_txt, dbp_txt, heart_txt, resp_txt); //결과값
-
-
-        ////하단 데이터 log 나열
-        //Dateinit();
-        //getDateData();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -287,6 +103,427 @@ public class FeedActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
+    public void connectServerBtn(View view) {
+        NetworkThread thread = new NetworkThread();
+
+        mDbOpenHelper = new DbOpenHelper(FeedActivity.this);
+        mDbOpenHelper.open();
+
+        thread.start();//쓰레드 발생
+    }
+
+    public void storeDBBtn(View view) {
+        NetworkThreadforStore thread = new NetworkThreadforStore();
+
+        mDbOpenHelper = new DbOpenHelper(FeedActivity.this);
+        mDbOpenHelper.open();
+
+        thread.start();//쓰레드 발생
+    }
+
+    //네트워크 처리 담당 쓰래드
+    class NetworkThread extends Thread {
+        @Override
+        public void run() {
+            super.run();
+
+            try {
+                //클라이언트 객체 생성
+                OkHttpClient client = new OkHttpClient();
+                //클라이언트 객체에 정보를 셋팅하는 빌더 생성
+                Request.Builder builder = new Request.Builder();
+                //요청할 페이지의 주소를 셋팅
+                builder = builder.url("http://192.168.0.9:8080/HttpBasicServer/server.jsp");
+
+                Request request = builder.build();
+                //요청한다
+
+                Call call = client.newCall(request);
+
+                NetworkCallback callback = new NetworkCallback();
+                call.enqueue(callback);
+                call.execute();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    //네트워크 처리 담당 쓰래드
+    class NetworkThreadforStore extends Thread {
+        @Override
+        public void run() {
+            super.run();
+
+            try {
+                //클라이언트 객체 생성
+                OkHttpClient client = new OkHttpClient();
+                //클라이언트 객체에 정보를 셋팅하는 빌더 생성
+                Request.Builder builder = new Request.Builder();
+                //요청할 페이지의 주소를 셋팅
+                builder = builder.url("http://192.168.0.9:8080/HttpBasicServer/server.jsp");
+
+                Request request = builder.build();
+                //요청한다
+
+                Call call = client.newCall(request);
+
+                NetworkCallbackforStore callback = new NetworkCallbackforStore();
+                call.enqueue(callback);
+                call.execute();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+        }
+    }
+
+    //응답결과가 수신되면 반응하는 call-back
+    class NetworkCallback implements Callback {
+        //네트워크 통신에 오류가 발생되면 호출되는 메서드
+        @Override
+        public void onFailure(Call call, IOException e) {
+
+        }
+
+        //응답결과가 정상적으로 수신되었을 때 호출되는 메서드
+        @Override
+        public void onResponse(Call call, final Response response) throws IOException {
+            try {
+                //응답 결과를 수신
+
+                mDbOpenHelper = new DbOpenHelper(FeedActivity.this);
+//                mDbOpenHelper.open();
+
+
+                final String result = response.body().string();
+                //다른 쓰레드일지라도, 같이 사용하도록 final 선언
+
+                //화면 갱신
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        String date = "";
+                        String time = "";
+                        String sbp_txt = "";
+                        String dbp_txt = "";
+                        String heart_txt = "";
+                        String resp_txt = "";
+
+                        System.out.println("RESULT-----" + result);
+
+
+//                        if(result.equals("\n\n\n\nError")){
+//                            text1.setText("NO DATA");
+//                        }
+//                        else{
+                        try {
+
+
+                            String[] temp = result.split(", "); //SBP, DBP값 파싱
+
+                            date = temp[0];
+                            date = date.replace(System.getProperty("line.separator"), "");//개행문자 포함안되도록 처리
+                            date = date.trim();//앞뒤 공백문자 포함안되도록 처리
+                            time = temp[1];
+                            time = time.replace(System.getProperty("line.separator"), "");//개행문자 포함안되도록 처리
+                            sbp_txt = temp[2];
+                            sbp_txt = sbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리
+                            dbp_txt = temp[3];
+                            dbp_txt = dbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리 (ex) "88\n"
+                            heart_txt = temp[4];
+                            heart_txt = heart_txt.replaceAll("[^0-9]", "");
+                            resp_txt = temp[5];
+                            resp_txt = resp_txt.replaceAll("[^0-9]", "");
+
+
+                            final TextView home_date = findViewById(R.id.home_date);
+                            final TextView home_time = findViewById(R.id.home_time);
+
+
+                            final ImageView bp_result = findViewById(R.id.bp_home);
+                            final ImageView heart_result = findViewById(R.id.heart_home);
+                            final ImageView resp_result = findViewById(R.id.resp_home);
+
+                            home_date.setText(date);
+                            home_time.setText(time);
+
+                            bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+                            heart_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+                            resp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+                            //결과 상태 기본 세팅
+
+
+                            //결과값에 따른 상태 판별
+                            int sbp_value = 0;
+                            int dbp_value = 0;
+                            int heart_value = 0;
+                            int resp_value = 0;
+
+                            try {
+                                sbp_value = Integer.parseInt(sbp_txt);
+                                dbp_value = Integer.parseInt(dbp_txt);
+                                //dbp_value = Integer.parseInt(dbp_txt.substring(0, 3));
+                                System.out.println("sbp_value : " + sbp_value);
+                                if (sbp_value < 90) {//저혈압
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result1));
+                                } else if (sbp_value >= 90 && sbp_value < 130) {
+                                    //정상
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result2));
+                                } else if (sbp_value >= 130 && sbp_value < 140) {
+                                    //고혈압 전단계
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result3));
+                                }else if (sbp_value >= 140 && sbp_value < 160) {
+                                    //1기 고혈압
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result4));
+                                }else if (sbp_value >= 160 && sbp_value < 180) {
+                                    //2기 고혈압
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result5));
+                                }else {
+                                    //고혈압 위기
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result6));
+                                }
+                            } catch(NumberFormatException nfe) {
+                                System.out.println("Could not parse " + nfe);
+                            }
+                            try {
+                                heart_value = Integer.parseInt(heart_txt);
+                                System.out.println("heart_value : " + heart_value);
+                                if (heart_value < 50) {//서맥
+                                    heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result1));
+                                } else if (heart_value >= 50 && heart_value <= 100) {
+                                    //정상
+                                    heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result2));
+                                } else {
+                                    //빈맥
+                                    heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result3));
+                                }
+                            } catch(NumberFormatException nfe) {
+                                System.out.println("Could not parse " + nfe);
+                            }
+                            try {
+                                resp_value = Integer.parseInt(resp_txt);
+                                System.out.println("resp_value : " + resp_value);
+                                if (resp_value < 11) {//서맥
+                                    resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result1));
+                                } else if (resp_value >= 11 && resp_value <= 23) {
+                                    //정상
+                                    resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result2));
+                                } else {
+                                    //빈맥
+                                    resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result3));
+                                }
+                            } catch(NumberFormatException nfe) {
+                                System.out.println("Could not parse " + nfe);
+                            }
+
+                            System.out.println("===============================");
+                            System.out.println(date);
+                            System.out.println(time);
+                            System.out.println(sbp_txt);
+                            System.out.println(dbp_txt);
+                            System.out.println(heart_txt);
+                            System.out.println(resp_txt);
+                            System.out.println("===============================");
+
+//                            //DB 저장
+                            userdata = new TempData(date, time , sbp_value, dbp_value, heart_value, resp_value);
+//
+                            init();
+//
+                            getData(sbp_txt, dbp_txt, heart_txt, resp_txt); //결과값
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+
+                        }
+
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //응답결과가 수신되면 반응하는 call-back
+    class NetworkCallbackforStore implements Callback {
+        //네트워크 통신에 오류가 발생되면 호출되는 메서드
+        @Override
+        public void onFailure(Call call, IOException e) {
+
+        }
+
+        //응답결과가 정상적으로 수신되었을 때 호출되는 메서드
+        @Override
+        public void onResponse(Call call, final Response response) throws IOException {
+            try {
+                //응답 결과를 수신
+
+                mDbOpenHelper = new DbOpenHelper(FeedActivity.this);
+//                mDbOpenHelper.open();
+
+
+                final String result = response.body().string();
+                //다른 쓰레드일지라도, 같이 사용하도록 final 선언
+
+                //화면 갱신
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        String date = "";
+                        String time = "";
+                        String sbp_txt = "";
+                        String dbp_txt = "";
+                        String heart_txt = "";
+                        String resp_txt = "";
+
+                        System.out.println("RESULT-----" + result);
+
+
+//                        if(result.equals("\n\n\n\nError")){
+//                            text1.setText("NO DATA");
+//                        }
+//                        else{
+                        try {
+
+
+                            String[] temp = result.split(", "); //SBP, DBP값 파싱
+
+                            date = temp[0];
+                            date = date.replace(System.getProperty("line.separator"), "");//개행문자 포함안되도록 처리
+                            date = date.trim();//앞뒤 공백문자 포함안되도록 처리
+                            time = temp[1];
+                            time = time.replace(System.getProperty("line.separator"), "");//개행문자 포함안되도록 처리
+                            sbp_txt = temp[2];
+                            sbp_txt = sbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리
+                            dbp_txt = temp[3];
+                            dbp_txt = dbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리 (ex) "88\n"
+                            heart_txt = temp[4];
+                            heart_txt = heart_txt.replaceAll("[^0-9]", "");
+                            resp_txt = temp[5];
+                            resp_txt = resp_txt.replaceAll("[^0-9]", "");
+
+
+                            final TextView home_date = findViewById(R.id.home_date);
+                            final TextView home_time = findViewById(R.id.home_time);
+
+
+                            final ImageView bp_result = findViewById(R.id.bp_home);
+                            final ImageView heart_result = findViewById(R.id.heart_home);
+                            final ImageView resp_result = findViewById(R.id.resp_home);
+
+                            home_date.setText(date);
+                            home_time.setText(time);
+
+                            bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+                            heart_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+                            resp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+                            //결과 상태 기본 세팅
+
+
+                            //결과값에 따른 상태 판별
+                            int sbp_value = 0;
+                            int dbp_value = 0;
+                            int heart_value = 0;
+                            int resp_value = 0;
+
+                            try {
+                                sbp_value = Integer.parseInt(sbp_txt);
+                                dbp_value = Integer.parseInt(dbp_txt);
+                                //dbp_value = Integer.parseInt(dbp_txt.substring(0, 3));
+                                System.out.println("sbp_value : " + sbp_value);
+                                if (sbp_value < 90) {//저혈압
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result1));
+                                } else if (sbp_value >= 90 && sbp_value < 130) {
+                                    //정상
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result2));
+                                } else if (sbp_value >= 130 && sbp_value < 140) {
+                                    //고혈압 전단계
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result3));
+                                }else if (sbp_value >= 140 && sbp_value < 160) {
+                                    //1기 고혈압
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result4));
+                                }else if (sbp_value >= 160 && sbp_value < 180) {
+                                    //2기 고혈압
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result5));
+                                }else {
+                                    //고혈압 위기
+                                    bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result6));
+                                }
+                            } catch(NumberFormatException nfe) {
+                                System.out.println("Could not parse " + nfe);
+                                Toast.makeText(FeedActivity.this,"측정된 데이터가 없습니다",Toast.LENGTH_SHORT).show();
+
+                            }
+                            try {
+                                heart_value = Integer.parseInt(heart_txt);
+                                System.out.println("heart_value : " + heart_value);
+                                if (heart_value < 50) {//서맥
+                                    heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result1));
+                                } else if (heart_value >= 50 && heart_value <= 100) {
+                                    //정상
+                                    heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result2));
+                                } else {
+                                    //빈맥
+                                    heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result3));
+                                }
+                            } catch(NumberFormatException nfe) {
+                                System.out.println("Could not parse " + nfe);
+                            }
+                            try {
+                                resp_value = Integer.parseInt(resp_txt);
+                                System.out.println("resp_value : " + resp_value);
+                                if (resp_value < 11) {//서맥
+                                    resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result1));
+                                } else if (resp_value >= 11 && resp_value <= 23) {
+                                    //정상
+                                    resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result2));
+                                } else {
+                                    //빈맥
+                                    resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result3));
+                                }
+                            } catch(NumberFormatException nfe) {
+                                System.out.println("Could not parse " + nfe);
+                            }
+
+                            System.out.println("===============================");
+                            System.out.println(date);
+                            System.out.println(time);
+                            System.out.println(sbp_txt);
+                            System.out.println(dbp_txt);
+                            System.out.println(heart_txt);
+                            System.out.println(resp_txt);
+                            System.out.println("===============================");
+
+                            //DB 저장
+                            userdata = new TempData(date, time , sbp_value, dbp_value, heart_value, resp_value);
+
+                            init();
+
+                            mDbOpenHelper.insertColumn(date, time, sbp_value, dbp_value, heart_value, resp_value);
+
+                            getData(sbp_txt, dbp_txt, heart_txt, resp_txt); //결과값
+
+
+                        } catch (Exception e) {
+                            e.printStackTrace();
+
+                        }
+
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
     @Override
     public void onBackPressed() {
@@ -372,8 +609,7 @@ public class FeedActivity extends AppCompatActivity
         //sbp_result = sbp_result.concat("mmHg");
         String dbp_result = "확장 " + dbp + " mmHg";
         String heart_result = "심박 " + heart + " bpm";
-        String resp_result = "호흡 " + resp +" 회/분";
-
+        String resp_result = "호흡 " + resp + " 회/분";
 
 
         List<String> listContent = Arrays.asList(
@@ -384,7 +620,7 @@ public class FeedActivity extends AppCompatActivity
         );
 
         System.out.println("===============listContent==========");
-        for(int i=0; i<listContent.size();i++) {
+        for (int i = 0; i < listContent.size(); i++) {
             System.out.println(listContent.get(i));
         }
 
@@ -408,7 +644,7 @@ public class FeedActivity extends AppCompatActivity
         adapter.notifyDataSetChanged();
     }//함수 getData() 끝
 
-    public void restart(){
+    public void restart() {
         Intent nextIntent = new Intent(this, FeedActivity.class);
         ProcessPhoenix.triggerRebirth(this, nextIntent);
     }
@@ -421,213 +657,177 @@ public class FeedActivity extends AppCompatActivity
         switch (v.getId()) {//시간 저장을 위한 기능
             case R.id.btn_measure: //시간 측정 버튼 => 측정 시간 저장 , 시간 카운트다운 시작
 
-                userdata = new TempData("", "" , 0, 0, 0, 0);
-                //Date 객체를 이용한 현재 시간 출력//
-                SimpleDateFormat format1 = new SimpleDateFormat("yyyy-MM-dd");
-                SimpleDateFormat format2 = new SimpleDateFormat("HH:mma");
-
-                Date gettime = new Date();
-
-                Date today = new Date();
-                System.out.println(today);
-
-                String time1 = format1.format(gettime);
-                String time2 = format2.format(gettime);
-
-                userdata.setDate(time1); userdata.setTime(time2);
-
-                Boolean sleep_check = false;
-                try{
-                    Thread.sleep(60000);
-                    sleep_check = true;
-                }catch(InterruptedException e){
-                    System.out.println(e.getMessage());
-                }
-
-
-                if(sleep_check.booleanValue()==true){
-                    Toast
-                            .makeText(this,"[1분경과] 측정이 완료되었습니다. 결과를 확인해주세요.",Toast.LENGTH_SHORT)
-                            .show();
-                }
-                else{
-                    Toast
-                            .makeText(this,"Error",Toast.LENGTH_SHORT)
-                            .show();
-                }
-
 
                 break;
             case R.id.btn_result:
 
-                //restart();//다시 시작
-
-
-                //건강 결과가 담겨있는 txt파일에서 각각의 결과값을 받아올 String 변수 선언
-                String bp_txt = "";
-
-                String sbp_txt = "";
-                String dbp_txt = "";
-                String heart_txt = "";
-                String resp_txt = "";
-
-                /////////////////// "res/raw" 경로에 있는 Result txt file 읽기에 대한 try - catch 문 ////////////////
-                try {
-                    InputStream in = getResources().openRawResource(R.raw.bp);
-                    byte[] result = new byte[in.available()];
-                    in.read(result);
-                    bp_txt = new String(result);
-                    System.out.println("BP DATA " + bp_txt);
-                } catch (Exception e) {
-
-                }
-                System.out.println("BP DATA " + bp_txt);
-
-                String[] bp_temp = bp_txt.split(", "); //SBP, DBP값 파싱
-
-                sbp_txt = bp_temp[0];
-                sbp_txt = sbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리
-                dbp_txt = bp_temp[1];
-                dbp_txt = dbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리 (ex) "88\n"
-
-                System.out.println("SBP DATA " + sbp_txt);
-                System.out.println("DBP DATA " + dbp_txt);
-                try {
-
-                    InputStream in = getResources().openRawResource(R.raw.heart);
-                    byte[] result = new byte[in.available()];
-                    in.read(result);
-                    heart_txt = new String(result);
-                    System.out.println("HEART DATA " + heart_txt);
-                    heart_txt = heart_txt.replaceAll("[^0-9]", "");
-                } catch (Exception e) {
-
-                }
-                System.out.println("HEART DATA " + heart_txt);
-
-                try {
-
-                    InputStream in = getResources().openRawResource(R.raw.resp);
-                    byte[] result = new byte[in.available()];
-                    in.read(result);
-                    resp_txt = new String(result);
-                    System.out.println("RESP DATA " + resp_txt);
-                    resp_txt = resp_txt.replaceAll("[^0-9]", "");
-                } catch (Exception e) {
-
-                }
-                System.out.println("RESP DATA " + resp_txt);
-                ///////////////////////Result txt file 받아오기 - end /////////////////////////////////
-
-                //Date 객체를 이용한 현재 시간 출력//
-                SimpleDateFormat newformat1 = new SimpleDateFormat("yyyy-MM-dd");
-                SimpleDateFormat newformat2 = new SimpleDateFormat("HH");
-                SimpleDateFormat newformat3 = new SimpleDateFormat("a");
-                String calmin = "";
-
-                Calendar cal = Calendar.getInstance ( );
-                cal.add ( cal.MINUTE, -2 );
-                Date newtime = new Date();
-
-                Date newtoday = new Date();
-                System.out.println(newtoday);
-
-
-                String newtime1 = newformat1.format(newtime);
-                String newtime2 = newformat2.format(newtime)+":"+cal.get(cal.MINUTE)+newformat3.format(newtime);
-
-                // System.out.println(time1);
-                //System.out.println(time2);
-
-                final TextView home_date = findViewById(R.id.home_date);
-                final TextView home_time = findViewById(R.id.home_time);
-
-
-                final ImageView bp_result = findViewById(R.id.bp_home);
-                final ImageView heart_result = findViewById(R.id.heart_home);
-                final ImageView resp_result = findViewById(R.id.resp_home);
-
-
-
-                home_date.setText(newtime1);
-                home_time.setText(newtime2);
-
-
-                bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
-                heart_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
-                resp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
-
-                int sbp_value = 0;
-                int dbp_value = 0;
-                int heart_value = 0;
-                int resp_value = 0;
-
-                try {
-                    sbp_value = Integer.parseInt(sbp_txt);
-                    dbp_value = Integer.parseInt(dbp_txt);
-                    //dbp_value = Integer.parseInt(dbp_txt.substring(0, 3));
-                    System.out.println("sbp_value : " + sbp_value);
-                    if (sbp_value < 90) {//저혈압
-                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result1));
-                    } else if (sbp_value >= 90 && sbp_value < 130) {
-                        //정상
-                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result2));
-                    } else if (sbp_value >= 130 && sbp_value < 140) {
-                        //고혈압 전단계
-                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result3));
-                    }else if (sbp_value >= 140 && sbp_value < 160) {
-                        //1기 고혈압
-                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result4));
-                    }else if (sbp_value >= 160 && sbp_value < 180) {
-                        //2기 고혈압
-                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result5));
-                    }else {
-                        //고혈압 위기
-                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result6));
-                    }
-                } catch(NumberFormatException nfe) {
-                    System.out.println("Could not parse " + nfe);
-                }
-                try {
-                    heart_value = Integer.parseInt(heart_txt);
-                    System.out.println("heart_value : " + heart_value);
-                    if (heart_value < 50) {//서맥
-                        heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result1));
-                    } else if (heart_value >= 50 && heart_value <= 100) {
-                        //정상
-                        heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result2));
-                    } else {
-                        //빈맥
-                        heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result3));
-                    }
-                } catch(NumberFormatException nfe) {
-                    System.out.println("Could not parse " + nfe);
-                }
-                try {
-                    resp_value = Integer.parseInt(resp_txt);
-                    System.out.println("resp_value : " + resp_value);
-                    if (resp_value < 11) {//서맥
-                        resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result1));
-                    } else if (resp_value >= 11 && resp_value <= 23) {
-                        //정상
-                        resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result2));
-                    } else {
-                        //빈맥
-                        resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result3));
-                    }
-                } catch(NumberFormatException nfe) {
-                    System.out.println("Could not parse " + nfe);
-                }
-
-                //DB 저장
-                String dbdate = userdata.getDate();
-                String dbtime = userdata.getTime();
-
-                mDbOpenHelper.open();
-                mDbOpenHelper.insertColumn(dbdate, dbtime , sbp_value, dbp_value, heart_value, resp_value);
-                init();
-
-                getData(sbp_txt, dbp_txt, heart_txt, resp_txt); //결과값
+//                //restart();//다시 시작
+//
+//
+//                //건강 결과가 담겨있는 txt파일에서 각각의 결과값을 받아올 String 변수 선언
+//                String bp_txt = "";
+//
+//                String sbp_txt = "";
+//                String dbp_txt = "";
+//                String heart_txt = "";
+//                String resp_txt = "";
+//
+//                /////////////////// "res/raw" 경로에 있는 Result txt file 읽기에 대한 try - catch 문 ////////////////
+//                try {
+//                    InputStream in = getResources().openRawResource(R.raw.bp);
+//                    byte[] result = new byte[in.available()];
+//                    in.read(result);
+//                    bp_txt = new String(result);
+//                    System.out.println("BP DATA " + bp_txt);
+//                } catch (Exception e) {
+//
+//                }
+//                System.out.println("BP DATA " + bp_txt);
+//
+//                String[] bp_temp = bp_txt.split(", "); //SBP, DBP값 파싱
+//
+//                sbp_txt = bp_temp[0];
+//                sbp_txt = sbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리
+//                dbp_txt = bp_temp[1];
+//                dbp_txt = dbp_txt.replaceAll("[^0-9]", "");//개행문자 포함안되도록 처리 (ex) "88\n"
+//
+//                System.out.println("SBP DATA " + sbp_txt);
+//                System.out.println("DBP DATA " + dbp_txt);
+//                try {
+//
+//                    InputStream in = getResources().openRawResource(R.raw.heart);
+//                    byte[] result = new byte[in.available()];
+//                    in.read(result);
+//                    heart_txt = new String(result);
+//                    System.out.println("HEART DATA " + heart_txt);
+//                    heart_txt = heart_txt.replaceAll("[^0-9]", "");
+//                } catch (Exception e) {
+//
+//                }
+//                System.out.println("HEART DATA " + heart_txt);
+//
+//                try {
+//
+//                    InputStream in = getResources().openRawResource(R.raw.resp);
+//                    byte[] result = new byte[in.available()];
+//                    in.read(result);
+//                    resp_txt = new String(result);
+//                    System.out.println("RESP DATA " + resp_txt);
+//                    resp_txt = resp_txt.replaceAll("[^0-9]", "");
+//                } catch (Exception e) {
+//
+//                }
+//                System.out.println("RESP DATA " + resp_txt);
+//                ///////////////////////Result txt file 받아오기 - end /////////////////////////////////
+//
+//                //Date 객체를 이용한 현재 시간 출력//
+//                SimpleDateFormat newformat1 = new SimpleDateFormat("yyyy-MM-dd");
+//                SimpleDateFormat newformat2 = new SimpleDateFormat("HH");
+//                SimpleDateFormat newformat3 = new SimpleDateFormat("a");
+//                String calmin = "";
+//
+//                Calendar cal = Calendar.getInstance();
+//                cal.add(cal.MINUTE, -2);
+//                Date newtime = new Date();
+//
+//                Date newtoday = new Date();
+//                System.out.println(newtoday);
+//
+//
+//                String newtime1 = newformat1.format(newtime);
+//                String newtime2 = newformat2.format(newtime) + ":" + cal.get(cal.MINUTE) + newformat3.format(newtime);
+//
+//                // System.out.println(time1);
+//                //System.out.println(time2);
+//
+//                final TextView home_date = findViewById(R.id.home_date);
+//                final TextView home_time = findViewById(R.id.home_time);
+//
+//
+//                final ImageView bp_result = findViewById(R.id.bp_home);
+//                final ImageView heart_result = findViewById(R.id.heart_home);
+//                final ImageView resp_result = findViewById(R.id.resp_home);
+//
+//
+//                home_date.setText(newtime1);
+//                home_time.setText(newtime2);
+//
+//
+//                bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+//                heart_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+//                resp_result.setImageDrawable(getResources().getDrawable(R.drawable.result_default));
+//
+//                int sbp_value = 0;
+//                int dbp_value = 0;
+//                int heart_value = 0;
+//                int resp_value = 0;
+//
+//                try {
+//                    sbp_value = Integer.parseInt(sbp_txt);
+//                    dbp_value = Integer.parseInt(dbp_txt);
+//                    //dbp_value = Integer.parseInt(dbp_txt.substring(0, 3));
+//                    System.out.println("sbp_value : " + sbp_value);
+//                    if (sbp_value < 90) {//저혈압
+//                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result1));
+//                    } else if (sbp_value >= 90 && sbp_value < 130) {
+//                        //정상
+//                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result2));
+//                    } else if (sbp_value >= 130 && sbp_value < 140) {
+//                        //고혈압 전단계
+//                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result3));
+//                    } else if (sbp_value >= 140 && sbp_value < 160) {
+//                        //1기 고혈압
+//                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result4));
+//                    } else if (sbp_value >= 160 && sbp_value < 180) {
+//                        //2기 고혈압
+//                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result5));
+//                    } else {
+//                        //고혈압 위기
+//                        bp_result.setImageDrawable(getResources().getDrawable(R.drawable.result6));
+//                    }
+//                } catch (NumberFormatException nfe) {
+//                    System.out.println("Could not parse " + nfe);
+//                }
+//                try {
+//                    heart_value = Integer.parseInt(heart_txt);
+//                    System.out.println("heart_value : " + heart_value);
+//                    if (heart_value < 50) {//서맥
+//                        heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result1));
+//                    } else if (heart_value >= 50 && heart_value <= 100) {
+//                        //정상
+//                        heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result2));
+//                    } else {
+//                        //빈맥
+//                        heart_result.setImageDrawable(getResources().getDrawable(R.drawable.heart_result3));
+//                    }
+//                } catch (NumberFormatException nfe) {
+//                    System.out.println("Could not parse " + nfe);
+//                }
+//                try {
+//                    resp_value = Integer.parseInt(resp_txt);
+//                    System.out.println("resp_value : " + resp_value);
+//                    if (resp_value < 11) {//서맥
+//                        resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result1));
+//                    } else if (resp_value >= 11 && resp_value <= 23) {
+//                        //정상
+//                        resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result2));
+//                    } else {
+//                        //빈맥
+//                        resp_result.setImageDrawable(getResources().getDrawable(R.drawable.resp_result3));
+//                    }
+//                } catch (NumberFormatException nfe) {
+//                    System.out.println("Could not parse " + nfe);
+//                }
+//
+//                //DB 저장
+//                String dbdate = userdata.getDate();
+//                String dbtime = userdata.getTime();
+//
+//                mDbOpenHelper.open();
+//                mDbOpenHelper.insertColumn(dbdate, dbtime, sbp_value, dbp_value, heart_value, resp_value);
+//                init();
+//
+//                getData(sbp_txt, dbp_txt, heart_txt, resp_txt); //결과값
                 break;
         }
     }

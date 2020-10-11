@@ -41,4 +41,5 @@ dependencies {
     implementation 'com.github.PhilJay:MPAndroidChart:v2.1.6'
     implementation 'com.jakewharton:process-phoenix:2.0.0'
     implementation 'gun0912.ted:tedpermission:1.0.3'
+    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
 }

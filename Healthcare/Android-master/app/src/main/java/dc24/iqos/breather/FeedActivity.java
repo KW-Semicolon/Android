@@ -133,7 +133,7 @@ public class FeedActivity extends AppCompatActivity
                 //클라이언트 객체에 정보를 셋팅하는 빌더 생성
                 Request.Builder builder = new Request.Builder();
                 //요청할 페이지의 주소를 셋팅
-                builder = builder.url("http://192.168.0.9:8080/HttpBasicServer/server.jsp");
+                builder = builder.url("http://localhost:8080/HttpBasicServer/server.jsp");
 
                 Request request = builder.build();
                 //요청한다
@@ -163,7 +163,7 @@ public class FeedActivity extends AppCompatActivity
                 //클라이언트 객체에 정보를 셋팅하는 빌더 생성
                 Request.Builder builder = new Request.Builder();
                 //요청할 페이지의 주소를 셋팅
-                builder = builder.url("http://192.168.0.9:8080/HttpBasicServer/server.jsp");
+                builder = builder.url("http://localhost:8080/HttpBasicServer/server.jsp");
 
                 Request request = builder.build();
                 //요청한다
